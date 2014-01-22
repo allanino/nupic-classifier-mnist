@@ -31,6 +31,7 @@ from nupic.frameworks.opf.modelfactory import ModelFactory
 from nupic.frameworks.opf.predictionmetricsmanager import MetricsManager
 
 import model_params
+import pickle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ def createModel():
 
 def runHotgym():
   acc = [0] # list of accuracy
-
+  count = 1
   model = createModel()
   model.enableInference({'predictedField': 'label'})
 
@@ -55,16 +56,22 @@ def runHotgym():
       for j in range(0,784):
         modelInput["pixel%d" % j] = int(modelInput["pixel%d" % j])
 
+      if i == 32000:
+        model.disableLearning()
+
       result = model.run(modelInput)
 
-      if modelInput["label"] == int(result.inferences['multiStepBestPredictions'][0] + 0.5):
-          ac = (acc[i-1]*(i-1.) + 1.)/i
-      else:
-          ac = (acc[i-1]*(i-1.))/i
+      if i > 32000:
+        if modelInput["label"] == int(result.inferences['multiStepBestPredictions'][0] + 0.5):
+            ac = (acc[count-1]*(count-1.) + 1.)/count
+        else:
+            ac = (acc[count-1]*(count-1.))/count
 
-      acc.append(ac)
+        acc.append(ac)
 
-      _LOGGER.info("%d: %.3f", i, ac)
+        _LOGGER.info("%d: %.4f", count, ac)
+
+        count = count + 1
 
       isLast = i == _NUM_RECORDS
       if isLast:
@@ -74,3 +81,4 @@ def runHotgym():
 if __name__ == "__main__":
   logging.basicConfig(level=logging.INFO)
   acc = runHotgym()
+  pickle.dump(acc, open('acc.p', 'wb'))
