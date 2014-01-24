@@ -25,6 +25,7 @@
 import csv
 import datetime
 import logging
+import os
 
 from nupic.frameworks.opf.metrics import MetricSpec
 from nupic.frameworks.opf.modelfactory import ModelFactory
@@ -35,50 +36,59 @@ import pickle
 
 _LOGGER = logging.getLogger(__name__)
 
-_NUM_RECORDS = 40000
+_NUM_RECORDS = 42000
+_TRAIN_SIZE = int(_NUM_RECORDS * 0.8)
 
 def createModel():
   return ModelFactory.create(model_params.MODEL_PARAMS)
 
 def runHotgym():
-  acc = [0] # list of accuracy
-  count = 1
+  count = 0 # Count test set
+  correct = 0 # Count correct predictions in test set
+
   model = createModel()
   model.enableInference({'predictedField': 'label'})
-
   with open('train.csv') as fin:
     reader = csv.reader(fin)
     headers = reader.next()
 
     for i, record in enumerate(reader, start=1):
       modelInput = dict(zip(headers, record))
-      modelInput["label"] = int(modelInput["label"])
+      modelInput["label"] = str(modelInput["label"])
       for j in range(0,784):
         modelInput["pixel%d" % j] = int(modelInput["pixel%d" % j])
 
-      if i == 32000:
+      # Disable learning to calculate accuracy in test set
+      if i == _TRAIN_SIZE:
         model.disableLearning()
 
       result = model.run(modelInput)
 
-      if i > 32000:
-        if modelInput["label"] == int(result.inferences['multiStepBestPredictions'][0] + 0.5):
-            ac = (acc[count-1]*(count-1.) + 1.)/count
+      # Calculate accuracy of test set
+      if i >= _TRAIN_SIZE:
+        print "Label:",modelInput["label"]
+        print "Predicted:", result.inferences['multiStepBestPredictions'][0]
+        print result.inferences['multiStepPredictions'][0]
+        if modelInput["label"] == result.inferences['multiStepBestPredictions'][0]:
+          correct = correct + 1
+          print 'Status: correct'
         else:
-            ac = (acc[count-1]*(count-1.))/count
-
-        acc.append(ac)
-
-        _LOGGER.info("%d: %.4f", count, ac)
-
+          print 'Status: wrong'
+        print
         count = count + 1
+
+        _LOGGER.info("Predicting: %d",count)
+      else:
+        _LOGGER.info("Training: %d",i)
 
       isLast = i == _NUM_RECORDS
       if isLast:
         break
-  return acc
+
+  # Return the calculated accuracy
+  return float(correct)/count
 
 if __name__ == "__main__":
   logging.basicConfig(level=logging.INFO)
-  acc = runHotgym()
-  pickle.dump(acc, open('acc.p', 'wb'))
+  ac = runHotgym()
+  print "\nAccuracy = %.3f" % ac

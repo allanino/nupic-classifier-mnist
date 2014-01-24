@@ -61,13 +61,19 @@ MODEL_PARAMS = {
             # (value generated from DS_ENCODER_SCHEMA)
             'encoders': {
                 u'label':     {  
+                  # 'classifierOnly': True, 
+                  # 'fieldname': u'label',
+                  # 'n': 121,
+                  # 'name': u'label',
+                  # 'type': 'ScalarEncoder',
+                  # 'minval':0,
+                  # 'maxval':9,
+                  # 'w': 21},
                   'classifierOnly': True, 
                   'fieldname': u'label',
                   'n': 121,
                   'name': u'label',
-                  'type': 'ScalarEncoder',
-                  'minval':0,
-                  'maxval':9,
+                  'type': 'SDRCategoryEncoder',
                   'w': 21},
             },
 
@@ -85,7 +91,7 @@ MODEL_PARAMS = {
             'sensorAutoReset' : None,
         },
 
-        'spEnable': False,
+        'spEnable': True,
 
         'spParams': {
             # SP diagnostic output verbosity control;
@@ -97,7 +103,7 @@ MODEL_PARAMS = {
             # Number of cell columns in the cortical region (same number for
             # SP and TP)
             # (see also tpNCellsPerCol)
-            'columnCount': 1024,
+            'columnCount': 2048,
 
             'inputWidth': 94864,
 
@@ -112,7 +118,7 @@ MODEL_PARAMS = {
             # What percent of the columns's receptive field is available
             # for potential synapses. At initialization time, we will
             # choose coincInputPoolPct * (2*coincInputRadius+1)^2
-            'coincInputPoolPct': 0.5,
+            'coincInputPoolPct': 0.85,
 
             # The default connected threshold. Any synapse whose
             # permanence value is above the connected threshold is
@@ -152,7 +158,7 @@ MODEL_PARAMS = {
             # The number of cells (i.e., states), allocated per column.
             'cellsPerColumn': 32,
 
-            'inputWidth': 2048,
+            'inputWidth': 94864,
 
             'seed': 1960,
 
@@ -231,7 +237,7 @@ MODEL_PARAMS = {
 
             # This controls how fast the classifier learns/forgets. Higher values
             # make it adapt faster and forget older patterns faster.
-            'alpha': 0.001,
+            'alpha': 0.0001,
 
             # This is set after the call to updateConfigFromSubConfig and is
             # computed from the aggregationInfo and predictAheadTime.
