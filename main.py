@@ -26,13 +26,9 @@ import csv
 import datetime
 import logging
 import os
-
-from nupic.frameworks.opf.metrics import MetricSpec
 from nupic.frameworks.opf.modelfactory import ModelFactory
-from nupic.frameworks.opf.predictionmetricsmanager import MetricsManager
 
 import model_params
-import pickle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,14 +41,15 @@ def createModel():
 def runHotgym():
   count = 0 # Count test set
   correct = 0 # Count correct predictions in test set
-
+  _LOGGER.info("Running.")
   model = createModel()
   model.enableInference({'predictedField': 'label'})
   with open('train.csv') as fin:
     reader = csv.reader(fin)
     headers = reader.next()
-
+    _LOGGER.info("File opened.")
     for i, record in enumerate(reader, start=1):
+
       modelInput = dict(zip(headers, record))
       modelInput["label"] = str(modelInput["label"])
       for j in range(0,784):
@@ -66,9 +63,9 @@ def runHotgym():
 
       # Calculate accuracy of test set
       if i >= _TRAIN_SIZE:
-        print "Label:",modelInput["label"]
-        print "Predicted:", result.inferences['multiStepBestPredictions'][0]
-        print result.inferences['multiStepPredictions'][0]
+        # print "Label:",modelInput["label"]
+        # print "Predicted:", result.inferences['multiStepBestPredictions'][0]
+        # print result.inferences['multiStepPredictions'][0]
         if modelInput["label"] == result.inferences['multiStepBestPredictions'][0]:
           correct = correct + 1
           print 'Status: correct'
@@ -77,7 +74,7 @@ def runHotgym():
         print
         count = count + 1
 
-        _LOGGER.info("Predicting: %d",count)
+        _LOGGER.info("Predicting: %d\t%.5f",count, float(correct)/count)
       else:
         _LOGGER.info("Training: %d",i)
 
